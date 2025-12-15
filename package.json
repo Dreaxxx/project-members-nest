@@ -17,7 +17,12 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "db:prepare": "node -e \"const fs=require('fs'); fs.mkdirSync('data',{recursive:true}); if(!fs.existsSync('data/app.db')) fs.copyFileSync('projects.db','data/app.db'); console.log('DB ready: data/app.db');\"",
+    "migration:run": "npm run db:prepare && npm run build && typeorm-ts-node-commonjs -d typeorm.data-source.ts migration:run",
+    "migration:revert": "npm run db:prepare && npm run build && typeorm-ts-node-commonjs -d typeorm.data-source.ts migration:revert",
+    "migration:create": "typeorm-ts-node-commonjs migration:create src/migrations/NewMigration",
+    "migration:generate": "npm run build && typeorm-ts-node-commonjs -d typeorm.data-source.ts migration:generate src/migrations/AutoMigration"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -30,8 +35,7 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "sqlite3": "^5.1.7",
-    "swagger-ui-express": "^5.0.1",
-    "typeorm": "^0.3.28"
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
@@ -55,6 +59,9 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
+    "typeorm": "^0.3.28",
+    "typeorm-model-generator": "^0.4.6",
+    "typeorm-ts-node-commonjs": "^0.3.20",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0"
   },

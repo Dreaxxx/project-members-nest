@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
   imports: [
     TypeOrmModule.forRoot({
       type: 'sqlite',
-      database: process.env.DB_PATH ?? 'projects.db',
+      database: process.env.DB_PATH ?? 'data/app.db',
       autoLoadEntities: true,
       synchronize: false,
+      migrations: [__dirname + '/migrations/*{.ts,.js}'],
     }),
   ],
 })
