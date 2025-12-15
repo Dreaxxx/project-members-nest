@@ -1,1 +1,15 @@
-node_modules
+/dist
+/node_modules
+/build
+/tmp
+/coverage
+
+logs
+*.log
+
+.env
+.env.test
+.env.local
+
+.temp
+.tmp
