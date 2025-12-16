@@ -18,15 +18,59 @@ export class ProjectsService {
         const project = await this.projectsRepo.findOne({ where: { id: projectId } });
         if (!project) throw new NotFoundException('Project not found');
 
-        const rows = await this.projectMembersRepo
-            .createQueryBuilder('project_members')
-            .innerJoin('project_members.user', 'user')
-            .where('project_members.project_id = :projectId', { projectId })
-            .select(['user.id AS id', "user.first_name || ' ' || user.last_name AS name"])
-            .orderBy('user.id', 'ASC')
-            .getRawMany();
+        const rows = await this.datasource.query(
+            `WITH RECURSIVE
+            tree(member_type, member_id, depth, group_path, visited_groups) AS (
+            -- 0) membres directs du projet
+            SELECT
+                pm.member_type,
+                pm.member_id,
+                0 AS depth,
+                '' AS group_path,
+                '' AS visited_groups
+            FROM projects_members_v2 pm
+            WHERE pm.project_id = ?
 
-        return rows;
+            UNION ALL
+
+            -- 1) si on rencontre un group, on descend dans ses membres
+            SELECT
+                gm.member_type,
+                gm.member_id,
+                t.depth + 1,
+                CASE
+                WHEN t.group_path = '' THEN g.name
+                ELSE t.group_path || '>' || g.name
+                END AS group_path,
+                t.visited_groups || ',' || CAST(g.id AS TEXT) || ',' AS visited_groups
+            FROM tree t
+            JOIN groups g
+                ON t.member_type = 'group' AND g.id = t.member_id
+            JOIN group_members gm
+                ON gm.group_id = g.id
+            WHERE
+                t.depth < 5
+                -- anti-cycle: ne pas revisiter un group déjà dans la chaîne
+                AND instr(t.visited_groups, ',' || CAST(g.id AS TEXT) || ',') = 0
+            )
+            SELECT
+            u.id AS id,
+            (u.first_name || ' ' || u.last_name) AS name,
+            COALESCE(MIN(NULLIF(tree.group_path, '')), '') AS group_path
+            FROM tree
+            JOIN users u
+            ON tree.member_type = 'user'
+            AND u.id = tree.member_id
+            GROUP BY u.id
+            ORDER BY u.id;`,
+            [projectId],
+        );
+
+        return rows.map((r: any) => ({
+            id: r.id,
+            name: r.name,
+            groups: r.group_path ? String(r.group_path).split('>') : [],
+        }));
     }
 
     async addMembers(projectId: number, userIds: number[]) {
