@@ -21,7 +21,7 @@ export class ProjectsService {
         const rows = await this.datasource.query(
             `WITH RECURSIVE
             tree(member_type, member_id, depth, group_path, visited_groups) AS (
-            -- 0) membres directs du projet
+            -- 0) membres directs du projet sans aucun group
             SELECT
                 pm.member_type,
                 pm.member_id,
@@ -33,7 +33,7 @@ export class ProjectsService {
 
             UNION ALL
 
-            -- 1) si on rencontre un group, on descend dans ses membres
+            -- 1) si on rencontre un group, on descend dans ses membres que se soit user ou un uutre group
             SELECT
                 gm.member_type,
                 gm.member_id,
@@ -75,7 +75,7 @@ export class ProjectsService {
 
     async addMembers(projectId: number, userIds: number[]) {
         if (!Array.isArray(userIds) || userIds.length === 0) {
-            throw new BadRequestException('user_ids must be a non-empty array');
+            throw new BadRequestException('user_ids cannot be empty');
         }
 
         const project = await this.projectsRepo.findOne({ where: { id: projectId } });
