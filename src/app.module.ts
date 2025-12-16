@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ProjectsModule } from './projects/projects.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       synchronize: false,
       migrations: [__dirname + '/migrations/*{.ts,.js}'],
     }),
+    ProjectsModule
   ],
 })
 export class AppModule { }
