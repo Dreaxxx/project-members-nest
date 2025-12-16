@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { DataSource, In, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Project } from './entities/project.entity';
@@ -30,6 +30,10 @@ export class ProjectsService {
     }
 
     async addMembers(projectId: number, userIds: number[]) {
+        if (!Array.isArray(userIds) || userIds.length === 0) {
+            throw new BadRequestException('user_ids must be a non-empty array');
+        }
+
         const project = await this.projectsRepo.findOne({ where: { id: projectId } });
         if (!project) throw new NotFoundException('Project not found');
 
