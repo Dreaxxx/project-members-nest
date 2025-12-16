@@ -48,6 +48,10 @@ export class ProjectsController {
     @ApiParam({ name: 'projectId', type: Number })
     @ApiParam({ name: 'userId', type: Number })
     @HttpCode(204)
+    @ApiResponse({
+        status: 404,
+        description: 'Project or user not found',
+    })
     async remove(
         @Param('projectId', ParseIntPipe) projectId: number,
         @Param('userId', ParseIntPipe) userId: number,

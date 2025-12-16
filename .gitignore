@@ -13,3 +13,5 @@ logs
 
 .temp
 .tmp
+
+/test/tmp
